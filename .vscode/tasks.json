@@ -10,16 +10,34 @@
             "options": {
                 "cwd": "${workspaceFolder}/simulation"
             },
-            "problemMatcher": {
-                "fileLocation": ["relative", "${workspaceFolder}/simulation/out"],
-                "pattern": {
-                    "regexp": "^.*\\*\\* (\\S*): \\(\\S*\\) (\\S*)\\((\\d*)\\): (.*)$",
-                    "file": 2,
-                    "line": 3,
-                    "severity": 1,
-                    "message": 4
-                  }
-            },
+            "problemMatcher": [
+                {
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/simulation/out"
+                    ],
+                    "pattern": {
+                        "regexp": "^.*\\*\\* (\\S*): \\(\\S*\\) (\\S*)\\((\\d*)\\): (.*)$",
+                        "file": 2,
+                        "line": 3,
+                        "severity": 1,
+                        "message": 4
+                    }
+                },
+                {
+                    "fileLocation": [
+                        "relative",
+                        "${workspaceFolder}/simulation/out"
+                    ],
+                    "pattern": {
+                        "regexp": "^.*\\*\\* (\\S*): (\\S*)\\((\\d*)\\): \\(\\S*\\) (.*)$",
+                        "file": 2,
+                        "line": 3,
+                        "severity": 1,
+                        "message": 4
+                    }
+                }
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
