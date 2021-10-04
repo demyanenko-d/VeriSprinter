@@ -1,0 +1,21 @@
+[*]
+[*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
+[*] Mon Oct 04 06:42:30 2021
+[*]
+[dumpfile] "D:\ProjectWork\VeriSprinter\simulation\out\dump.vcd"
+[dumpfile_mtime] "Mon Oct 04 06:40:05 2021"
+[dumpfile_size] 14307
+[savefile] "D:\ProjectWork\VeriSprinter\simulation\out.gtkw"
+[timestart] 2080000
+[size] 1522 600
+[pos] -1 -1
+*-18.000000 2638000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] testbench.
+[sst_width] 254
+[signals_width] 78
+[sst_expanded] 1
+[sst_vpaned_height] 156
+@28
+testbench.tg42
+[pattern_trace] 1
+[pattern_trace] 0

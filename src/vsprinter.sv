@@ -1,5 +1,5 @@
 
-module VeriSprinter(
+module vsprinter(
     input   wire                tg42_i,
     output  wire                clkz1_o,
 
@@ -48,6 +48,21 @@ module VeriSprinter(
     output  wire                wr_awg_o,
     output  wire                rd_kmps_o,
     output  wire                wr_dmg_o
+);
+
+video video(
+    .clk42_i(tg42_i),
+    .res_n_i(n_reset_io),
+
+    .wr_col(wr_col_o),
+    .dir_port(8'b0000_1000),
+    .zx_port_i(8'h00),
+
+    // vram
+    .vram_addr_o(va_o),
+    .vram_dat_io({vd3, vd2, vd1, vd0}),
+    .vram_cs_n_o(n_vcs_o),
+    .vram_we_n_o(n_vwr_o)
 );
 
 

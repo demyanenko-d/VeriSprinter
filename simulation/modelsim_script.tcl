@@ -1,12 +1,20 @@
 vlib work
 vmap work work
 
-vlog ../testbench.sv ../../src/VeriSprinter.sv 
-vsim work.testbench
+onerror {quit -f}
 
+vlog -sv +incdir+../models +incdir+../vram \
+../testbench.sv \
+../models/sram.v \
+../../src/vsprinter.sv \
+../../src/video.sv 
+
+vsim work.testbench.video
 add  wave sim:/testbench/*
 
-run  -all
+run 70us
+
+#run  -all
 #wave zoom full
 
-quit
+quit -f

@@ -10,9 +10,16 @@
             "options": {
                 "cwd": "${workspaceFolder}/simulation"
             },
-            "problemMatcher": [
-                
-            ],
+            "problemMatcher": {
+                "fileLocation": ["relative", "${workspaceFolder}/simulation/out"],
+                "pattern": {
+                    "regexp": "^.*\\*\\* (\\S*): \\(\\S*\\) (\\S*)\\((\\d*)\\): (.*)$",
+                    "file": 2,
+                    "line": 3,
+                    "severity": 1,
+                    "message": 4
+                  }
+            },
             "group": {
                 "kind": "build",
                 "isDefault": true

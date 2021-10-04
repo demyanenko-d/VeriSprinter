@@ -1,0 +1,1 @@
+gtkwave.exe -A --rcvar "fontname_signals Monospace 14" --rcvar "fontname_waves Monospace 12"

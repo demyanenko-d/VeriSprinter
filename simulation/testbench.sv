@@ -2,7 +2,12 @@
 
 module testbench();
 
-wire                tg42;
+reg tg42 = 0;
+
+always begin
+    tg42 = #23.81 !tg42; // ~42mhz
+end
+
 wire                clkz1;
 
 wire                n_wait;
@@ -51,7 +56,9 @@ wire                wr_awg;
 wire                rd_kmps;
 wire                wr_dmg;
 
-VeriSprinter dut(
+
+
+vsprinter dut(
     tg42, clkz1,
     n_wait, n_reset, n_m1, n_rfsh, n_iorq, n_wr, n_rd, n_halt, n_mreq, a, d,
     n_cs_rom, n_cs_cash, ra,
@@ -60,6 +67,38 @@ VeriSprinter dut(
     dac_data, dac_ws, dac_bck,
     md, ma, n_ras, n_cas, n_we,
     xacs, xa, sxa, rdxa, wr_awg, rd_kmps, wr_dmg
+);
+
+sram #(.INITFILE("..\\vram\\bios0.mif"))ram0(
+    .addr_i({1'b0, va}),
+    .ce_n_i(n_vcs[0]),
+    .oe_n_i(1'b0),
+    .we_n_i(n_vwr[0]),
+    .dat_io(vd0)
+);
+
+sram #(.INITFILE("..\\vram\\bios1.mif"))ram1(
+    .addr_i({1'b0, va}),
+    .ce_n_i(n_vcs[0]),
+    .oe_n_i(1'b0),
+    .we_n_i(n_vwr[1]),
+    .dat_io(vd1)
+);
+
+sram #(.INITFILE("..\\vram\\bios2.mif"))ram2(
+    .addr_i({1'b0, va}),
+    .ce_n_i(n_vcs[0]),
+    .oe_n_i(1'b0),
+    .we_n_i(n_vwr[2]),
+    .dat_io(vd2)
+);
+
+sram #(.INITFILE("..\\vram\\bios3.mif"))ram3(
+    .addr_i({1'b0, va}),
+    .ce_n_i(n_vcs[0]),
+    .oe_n_i(1'b0),
+    .we_n_i(n_vwr[3]),
+    .dat_io(vd3)
 );
 
     // do at the beginning of the simulation
