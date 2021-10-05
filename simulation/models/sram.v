@@ -11,21 +11,21 @@ module sram #(
     inout   wire    [7:0]   dat_io
 );
 
-wire    ce_n = ce_n_i;
-wire    oe_n = oe_n_i;
-wire    we_n = we_n_i;
+reg [7:0]   ram [0:65535];
 
-reg [7:0]   ram [0:131072];
-assign      dat_io = (!ce_n && !oe_n && we_n)  ? ram[addr_i] : 8'hzz;
+wire        #7  wa = we_n_i;
+wire        #10 dq = (!ce_n_i && !oe_n_i && we_n_i);
+wire [16:0] #10 da = addr_i;
+
+assign dat_io = (!ce_n_i && !oe_n_i && we_n_i) ? ram[da] : 8'hzz;
 
 initial begin
     $readmemh(INITFILE, ram, 0, 65535);    
 end
 
-
-always @(posedge we_n) begin
-    if (!ce_n && oe_n)
-        ram[addr_i] = dat_io;
+always @(posedge wa) begin
+    if (!ce_n_i && oe_n_i)
+        ram[addr_i] <= dat_io;
 end
 
 endmodule

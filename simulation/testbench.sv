@@ -5,7 +5,7 @@ module testbench();
 reg tg42 = 0;
 
 always begin
-    tg42 = #23.81 !tg42; // ~42mhz
+    tg42 = #11.904 !tg42; // ~42mhz
 end
 
 wire                clkz1;
@@ -100,6 +100,8 @@ sram #(.INITFILE("..\\vram\\bios3.mif"))ram3(
     .we_n_i(n_vwr[3]),
     .dat_io(vd3)
 );
+
+
 
     // do at the beginning of the simulation
     initial 

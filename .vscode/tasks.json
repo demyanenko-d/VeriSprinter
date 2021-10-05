@@ -16,26 +16,30 @@
                         "relative",
                         "${workspaceFolder}/simulation/out"
                     ],
-                    "pattern": {
-                        "regexp": "^.*\\*\\* (\\S*): \\(\\S*\\) (\\S*)\\((\\d*)\\): (.*)$",
-                        "file": 2,
-                        "line": 3,
-                        "severity": 1,
-                        "message": 4
-                    }
+                    "pattern": [
+                        {
+                            "regexp": "^.*\\*\\* (\\S*): (\\S*)\\((\\d*)\\): \\(\\S*\\)(.*)$",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1,
+                            "message": 4
+                        }
+                    ]
                 },
                 {
                     "fileLocation": [
                         "relative",
                         "${workspaceFolder}/simulation/out"
                     ],
-                    "pattern": {
-                        "regexp": "^.*\\*\\* (\\S*): (\\S*)\\((\\d*)\\): \\(\\S*\\) (.*)$",
-                        "file": 2,
-                        "line": 3,
-                        "severity": 1,
-                        "message": 4
-                    }
+                    "pattern": [
+                        {
+                            "regexp": "^.*\\*\\* (\\S*): \\(\\S*\\) (\\S*)\\((\\d*)\\):(.*)$",
+                            "file": 2,
+                            "line": 3,
+                            "severity": 1,
+                            "message": 4
+                        }
+                    ]
                 }
             ],
             "group": {

@@ -1,21 +1,57 @@
 [*]
 [*] GTKWave Analyzer v3.3.108 (w)1999-2020 BSI
-[*] Mon Oct 04 06:42:30 2021
+[*] Tue Oct 05 14:49:40 2021
 [*]
 [dumpfile] "D:\ProjectWork\VeriSprinter\simulation\out\dump.vcd"
-[dumpfile_mtime] "Mon Oct 04 06:40:05 2021"
-[dumpfile_size] 14307
+[dumpfile_mtime] "Tue Oct 05 14:41:49 2021"
+[dumpfile_size] 50794095
 [savefile] "D:\ProjectWork\VeriSprinter\simulation\out.gtkw"
-[timestart] 2080000
-[size] 1522 600
+[timestart] 395000
+[size] 1920 1003
 [pos] -1 -1
-*-18.000000 2638000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-18.600000 748000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] testbench.
+[treeopen] testbench.dut.
 [sst_width] 254
-[signals_width] 78
+[signals_width] 358
 [sst_expanded] 1
-[sst_vpaned_height] 156
+[sst_vpaned_height] 562
 @28
 testbench.tg42
+testbench.dut.video.clk_7m[2:0]
+@22
+testbench.dut.video.clk_14m[3:0]
+testbench.dut.video.cntx[5:0]
+>16710
+testbench.dut.video.cnty[8:0]
+@28
+>0
+testbench.dut.video.fase_cpu_wr
+testbench.dut.video.fase_rd_attrs
+testbench.dut.video.fase_rd_modes
+testbench.dut.video.fase_rd_pallete
+testbench.dut.video.fase_rd_pixels
+testbench.dut.video.fetch_cpu_wr
+testbench.dut.video.fetch_curr_mode
+testbench.dut.video.fetch_rd_attrs
+testbench.dut.video.fetch_rd_modes
+@29
+testbench.dut.video.fetch_rd_pixels
+@22
+testbench.dut.video.vcnt[20:0]
+#{testbench.dut.video.vram_dat_io[31:0]} testbench.dut.video.vram_dat_io[31] testbench.dut.video.vram_dat_io[30] testbench.dut.video.vram_dat_io[29] testbench.dut.video.vram_dat_io[28] testbench.dut.video.vram_dat_io[27] testbench.dut.video.vram_dat_io[26] testbench.dut.video.vram_dat_io[25] testbench.dut.video.vram_dat_io[24] testbench.dut.video.vram_dat_io[23] testbench.dut.video.vram_dat_io[22] testbench.dut.video.vram_dat_io[21] testbench.dut.video.vram_dat_io[20] testbench.dut.video.vram_dat_io[19] testbench.dut.video.vram_dat_io[18] testbench.dut.video.vram_dat_io[17] testbench.dut.video.vram_dat_io[16] testbench.dut.video.vram_dat_io[15] testbench.dut.video.vram_dat_io[14] testbench.dut.video.vram_dat_io[13] testbench.dut.video.vram_dat_io[12] testbench.dut.video.vram_dat_io[11] testbench.dut.video.vram_dat_io[10] testbench.dut.video.vram_dat_io[9] testbench.dut.video.vram_dat_io[8] testbench.dut.video.vram_dat_io[7] testbench.dut.video.vram_dat_io[6] testbench.dut.video.vram_dat_io[5] testbench.dut.video.vram_dat_io[4] testbench.dut.video.vram_dat_io[3] testbench.dut.video.vram_dat_io[2] testbench.dut.video.vram_dat_io[1] testbench.dut.video.vram_dat_io[0]
+testbench.dut.video.vla[17:0]
+testbench.dut.video.mode0[7:0]
+@28
+testbench.dut.video.bord
+testbench.dut.video.blank
+@24
+testbench.dut.video.vfase[2:0]
+@28
+testbench.dut.video.text_mode
+#{testbench.dut.video.palnum[1:0]} testbench.dut.video.palnum[1] testbench.dut.video.palnum[0]
+@22
+testbench.dut.video.attr_data[7:0]
+#{testbench.dut.video.pal_index[7:0]} testbench.dut.video.pal_index[7] testbench.dut.video.pal_index[6] testbench.dut.video.pal_index[5] testbench.dut.video.pal_index[4] testbench.dut.video.pal_index[3] testbench.dut.video.pal_index[2] testbench.dut.video.pal_index[1] testbench.dut.video.pal_index[0]
 [pattern_trace] 1
 [pattern_trace] 0

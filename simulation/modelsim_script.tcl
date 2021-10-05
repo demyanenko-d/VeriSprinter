@@ -3,16 +3,18 @@ vmap work work
 
 onerror {quit -f}
 
-vlog -sv +incdir+../models +incdir+../vram \
+vlog -sv -64 +incdir+../models +incdir+../vram \
 ../testbench.sv \
 ../models/sram.v \
 ../../src/vsprinter.sv \
 ../../src/video.sv 
 
-vsim work.testbench.video
+vsim work.testbench
 add  wave sim:/testbench/*
 
-run 70us
+#run 170us
+#run 21ms
+run 3ms
 
 #run  -all
 #wave zoom full

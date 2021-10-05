@@ -50,6 +50,20 @@ module vsprinter(
     output  wire                wr_dmg_o
 );
 
+wire [3:0]  char_cnt;
+wire [5:0]  ray_cntx;
+wire [8:0]  ray_cnty;
+reg  [6:0]  cnt_frame;
+
+reg  [19:0] vaddr = 0;
+wire [15:0] md = 0;
+wire        wr = 0;
+wire        double_cas = 0;
+
+always @(posedge tg42_i) begin
+    vaddr <= vaddr + 1;
+end
+
 video video(
     .clk42_i(tg42_i),
     .res_n_i(n_reset_io),
@@ -60,9 +74,19 @@ video video(
 
     // vram
     .vram_addr_o(va_o),
-    .vram_dat_io({vd3, vd2, vd1, vd0}),
+    .vram_dat_io({vd3_o, vd2_o, vd1_o, vd0_o}),
     .vram_cs_n_o(n_vcs_o),
-    .vram_we_n_o(n_vwr_o)
+    .vram_we_n_o(n_vwr_o),
+
+    .char_cnt_o(char_cnt),
+    .ray_cntx_o(ray_cntx),
+    .ray_cnty_o(ray_cnty),
+    .cnt_frame_o(cnt_frame),
+
+    .vaddr_i(vaddr),
+    .md_i(md),
+    .wr_i(wr),
+    .double_cas_i(double_cas)
 );
 
 
