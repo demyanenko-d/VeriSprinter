@@ -114,7 +114,11 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     //console.log("modes: " + tmp_modes.toString(16));
                     //debug && console.log("vstate: RdModes");
                     //debug && console.log("cnt_y[8:3]: " + (cnt_y >> 3).toString(16) + " CT5: " + (pixel_7m >> 2) + " CTH[5:3]: " +  ray_cntx.toString(16));
-                    //debug && print_addr(va);
+
+                    if (pixel_7m ==0) {
+                    console.log("rd: modes **********************");
+                    debug && print_addr(va);
+                    }
                     //debug && debug_modes(tmp_modes);
 
                     break;
@@ -147,8 +151,11 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                             ((mode1 & 7) << 3) |
                             posx;
 
-                        va ^= 1 << 4;
+                        //va ^= 1 << 4;
                     }
+
+                    console.log("rd: graph");
+                    debug && print_addr(va);
 
                     // mux
                     let tmp = ram[va >> 2];
@@ -190,7 +197,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
             }
 
-            if (vfase == 6) {
+            if (vfase == 6 && pixel_7m == 7) {
                 mode0 = (tmp_modes >> 0) & 0xff;
                 mode1 = (tmp_modes >> 8) & 0xff;
                 mode2 = (tmp_modes >> 16) & 0xff;
@@ -234,6 +241,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
 
     }
+    //break;
     if (cnt_y > 140) break;
 }
 
