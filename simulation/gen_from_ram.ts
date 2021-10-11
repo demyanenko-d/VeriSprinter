@@ -1,4 +1,3 @@
-import { dir } from "console";
 import * as fs from "fs";
 import { PNG } from "pngjs";
 
@@ -30,11 +29,12 @@ let scr_h = 320;
 let scr_w = 448;
 
 let dir_port = 0b0000_1000;
-let zx_port = 0;
+let zx_port = 0b0000_0000;
 
 const pgm = (dir_port >> 3) & 1;
-const zx_screen = (zx_port >> 6) & 1;
+const zx_screen = (dir_port >> 0) & 1;
 const screen_off = (dir_port >> 4) != 0;
+const flash = 0;
 
 enum VState {
     RdModes,
@@ -64,8 +64,9 @@ let curr_r = 0, curr_g = 0, curr_b = 0;
 let pal_index = 0, pal_num = 0;
 
 for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
-    const scr_line = (cnt_y * 2) * scr_w * 2;
-    const scr_line2 = (cnt_y * 2 + 1) * scr_w * 2;
+    const scr_line = (cnt_y * 2) * scr_w * 2; // указатель для png
+    const scr_line2 = (cnt_y * 2 + 1) * scr_w * 2; // указатель для png удвоенная строка
+
     for (let cnt_x = 0; cnt_x < scr_w; cnt_x++) {
 
         const ray_cntx = cnt_x >> 3;
@@ -76,12 +77,26 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
             switch (vfase) {
                 case 1: {
-                    cur_state = mode_text ? VState.RdPixels : VState.None;
-                    //debug && console.log("state: RdPixels");
+                    cur_state = VState.None;
+                    if (mode_text) {
+                        if (pixel_7m == 0) cur_state = VState.RdPixels;
+                        if (pixel_7m == 4 && res640) cur_state = VState.RdPixels;
+                    }
+
+                    // cur_state = mode_text && pixel_7m == 1 ? VState.RdPixels : VState.None;
+                    // debug && console.log("state: RdPixels");
                     break
                 }
                 case 2: {
-                    cur_state = VState.RdAttrs;
+                    if (mode_gfx)
+                        cur_state = VState.RdAttrs;
+                    else {
+                        cur_state = VState.None;
+
+                        if (pixel_7m == 0) cur_state = VState.RdAttrs;
+                        if (pixel_7m == 4 && res640) cur_state = VState.RdAttrs;
+                    }
+
                     //debug && console.log("state: RdAttrs");
                     break
                 }
@@ -91,8 +106,12 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     break
                 }
                 case 4: {
+                    cur_state = VState.None;
                     pixel_14m |= 1;
-                    cur_state = VState.RdModes;
+
+                    if (pixel_7m == 0) cur_state = VState.RdModes;
+                    if (pixel_7m == 4) cur_state = VState.RdModes;
+
                     //debug && console.log("vfase: RdModes");
                     break
                 }
@@ -119,8 +138,8 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     //debug && console.log("cnt_y[8:3]: " + (cnt_y >> 3).toString(16) + " CT5: " + (pixel_7m >> 2) + " CTH[5:3]: " +  ray_cntx.toString(16));
 
                     if (pixel_7m == 0) {
-                        console.log("rd: modes **********************");
-                        debug && print_addr(va);
+                        //console.log("rd: modes **********************");
+                        //debug && print_addr(va);
                     }
                     //debug && debug_modes(tmp_modes);
 
@@ -132,7 +151,14 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
                     if (mode_text) {
                         // ZX-atr adress
-                        va = (mode2 << 10) | ((mode0 & 0x0f) << 6) | (zx_screen << 5) | 0x18 | ((mode0 >> 6) ^ 0x3);
+                        va = (mode2 << 10) | ((mode0 & 0x0f) << 6) | (zx_screen << 5) | 0x18 | ((mode0 >> 6));
+
+                        if ((cnt_y & 0x07) == 0) {
+                            console.log(`\n\nattr y: ${cnt_y & 0x07} ++++++++++++++ `);
+                            print_addr(va);
+                            console.log("\n");
+                        }
+
                     } else { // gfx
                         //	Graf adress
 
@@ -155,8 +181,8 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                             posx;
                     }
 
-                    console.log("rd: graph");
-                    debug && print_addr(va);
+                    //console.log("rd: graph");
+                    //debug && print_addr(va);
 
                     // mux
                     let tmp = ram[va >> 2];
@@ -167,11 +193,39 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
                 case VState.RdPixels: {
                     //	ZX-pic adress
-                    va = (mode1 << 10) | ((mode0 & 0x0f) << 6) | (zx_screen << 5) | ((mode0 >> 6) << 3) | ((cnt_y & 0x07) ^ 0x3);
+                    va = (mode1 << 10) |
+                        ((mode0 & 0x0f) << 6) |
+                        (zx_screen << 5) |
+                        (((mode0 >> 6) & 3) << 3) |
+                        (cnt_y & 0x07);
 
                     // mux
                     let tmp = ram[va >> 2];
                     pix = (tmp >> (8 * (va & 3))) & 0xff;
+
+                    if ((cnt_y & 0x07) == 0) {
+                        console.log(`\n\ntxt y: ${cnt_y & 0x07} >>>>>>>>>>>>>>>>>>>>>>>>>>>>> `);
+                        print_addr(va);
+
+                        console.log("\n");
+
+                        console.log(`mode0: ${mode0.toString(16)}`);
+                        console.log(`mode1: ${mode1.toString(16)}`);
+                        console.log(`mode2: ${mode2.toString(16)}`);
+                        
+                        console.log("\n");
+                        
+                        console.log(("00000000" + ram[(va >> 2) + 3].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 2].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 1].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 0].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 7].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 6].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 5].toString(2)).slice(-8));
+                        console.log(("00000000" + ram[(va >> 2) + 4].toString(2)).slice(-8));
+
+                        console.log("\n");
+                    }
 
                     break;
                 }
@@ -182,6 +236,37 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     curr_r = (tmp >> 0) & 0xff;
                     curr_g = (tmp >> 8) & 0xff;
                     curr_b = (tmp >> 16) & 0xff;
+
+                    // вывод пикселей
+                    if (vfase == 3) {
+                        let pointer = (scr_line + cnt_x * 2) << 2;
+                        png.data[pointer + 0] = curr_r;
+                        png.data[pointer + 1] = curr_g;
+                        png.data[pointer + 2] = curr_b;
+                        png.data[pointer + 3] = 0xff;
+
+                        // увдоение строк
+                        let pointer2 = (scr_line2 + cnt_x * 2) << 2;
+                        png.data[pointer2 + 0] = curr_r;
+                        png.data[pointer2 + 1] = curr_g;
+                        png.data[pointer2 + 2] = curr_b;
+                        png.data[pointer2 + 3] = 0xff;
+                    }
+
+                    if (vfase == 6) {
+                        let pointer = (scr_line + cnt_x * 2 + 1) << 2;
+                        png.data[pointer + 0] = curr_r;
+                        png.data[pointer + 1] = curr_g;
+                        png.data[pointer + 2] = curr_b;
+                        png.data[pointer + 3] = 0xff;
+
+                        // увдоение строк
+                        let pointer2 = (scr_line2 + cnt_x * 2 + 1) << 2;
+                        png.data[pointer2 + 0] = curr_r;
+                        png.data[pointer2 + 1] = curr_g;
+                        png.data[pointer2 + 2] = curr_b;
+                        png.data[pointer2 + 3] = 0xff;
+                    }
 
                     break;
                 }
@@ -199,7 +284,19 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 }
 
             } else {
-                let ww = 0;
+                if (vfase == 3)
+                    pix <<= 1;
+
+                //if (vfase == 6 && res640)
+                //                    pix <<= 1;
+
+                let curr_pix = (pix >> 7) & 1;
+                curr_pix |= flash << 1;
+                pal_num = (curr_pix << 2) | 0x4;
+                pal_index = attr;
+
+                //pal_index = 1 << (curr_pix + 3);
+                //pal_num = 0;
             }
 
             // чтение текущих модов
@@ -208,7 +305,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 mode1 = (tmp_modes >> 8) & 0xff;
                 mode2 = (tmp_modes >> 16) & 0xff;
 
-                if (oldmode0 != mode0) {
+                if (oldmode0 != mode0) { // микрооптимизация
 
                     bord = (mode0 >> 4) == 0x0f;
                     blank = (mode0 >> 2) == 0x3f || screen_off;
@@ -226,42 +323,12 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 oldmode0 = mode0;
             }
 
-            // вывод пикселей
-            if (vfase == 3) {
-                let pointer = (scr_line + cnt_x * 2) << 2;
-                png.data[pointer + 0] = curr_r;
-                png.data[pointer + 1] = curr_g;
-                png.data[pointer + 2] = curr_b;
-                png.data[pointer + 3] = 0xff;
-
-                let pointer2 = (scr_line2 + cnt_x * 2) << 2;
-                png.data[pointer2 + 0] = curr_r;
-                png.data[pointer2 + 1] = curr_g;
-                png.data[pointer2 + 2] = curr_b;
-                png.data[pointer2 + 3] = 0xff;
-            }
-
-            if (vfase == 6) {
-                let pointer = (scr_line + cnt_x * 2 + 1) << 2;
-                png.data[pointer + 0] = curr_r;
-                png.data[pointer + 1] = curr_g;
-                png.data[pointer + 2] = curr_b;
-                png.data[pointer + 3] = 0xff;
-
-                let pointer2 = (scr_line2 + cnt_x * 2 + 1) << 2;
-                png.data[pointer2 + 0] = curr_r;
-                png.data[pointer2 + 1] = curr_g;
-                png.data[pointer2 + 2] = curr_b;
-                png.data[pointer2 + 3] = 0xff;
-            }
-
-
         }
 
 
     }
     //break;
-    if (cnt_y > 100) break;
+    if (cnt_y > 40) break;
 }
 
 
