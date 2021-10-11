@@ -1,10 +1,22 @@
 import * as fs from "fs";
 import { PNG } from "pngjs";
+import { off } from "process";
 
 const debug = true;
 const content = fs.readFileSync("./vram/bios.bin").buffer;
 //const content = fs.readFileSync("./vram/256.bin").buffer;
 //const content = fs.readFileSync("./vram/flappy.bin").buffer;
+
+const src_ram = new Uint8Array(content)
+const nram = new Uint8Array(src_ram.length);
+
+for (let i = 0; i < src_ram.length; i++) {
+    const offs = (i & 0x1f) | ((i >> 5) & 0x1fe0);
+    const page = ((i >> 5) & 0x1f);
+    let addr = ((page << 13) | offs);
+    nram[addr] = src_ram[i];
+}
+
 
 const ram = new Uint32Array(content);
 const png = new PNG({
@@ -13,8 +25,12 @@ const png = new PNG({
     height: 640
 });
 
+fs.writeFileSync("out.bin", nram);
+
 function print_addr(va: number) {
-    console.log("VA: " + va.toString(16) + " ZX-PAGE: " + ((va >> 5) & 0x1f) + " offs(" + (((va & 0x1f) << 8) || (va >> 10)).toString(16) + ")");
+    const offs = (va & 0x1f) | ((va >> 5) & 0x1fe0);
+    const page = ((va >> 5) & 0x1f);
+    console.log("VA: " + va.toString(16) + " ZX-PAGE: " + page + " offs(" + offs.toString(16) + ") : " + ((page << 13) | offs).toString(16));
 }
 
 function debug_modes(modes: number) {
@@ -72,6 +88,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
         const ray_cntx = cnt_x >> 3;
         const pixel_7m = cnt_x & 0x07;
         let pixel_14m = pixel_7m << 1;
+        let dbg_str = cnt_y == 0 && cnt_x >= 168;
 
         for (let vfase = 1; vfase <= 6; vfase++) {
 
@@ -101,7 +118,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     break
                 }
                 case 3: {
-                    cur_state = res640 ? VState.RdPallete : VState.None;
+                    cur_state = VState.RdPallete;
                     //debug && console.log("state: RdPallete");
                     break
                 }
@@ -153,7 +170,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                         // ZX-atr adress
                         va = (mode2 << 10) | ((mode0 & 0x0f) << 6) | (zx_screen << 5) | 0x18 | ((mode0 >> 6));
 
-                        if ((cnt_y & 0x07) == 0) {
+                        if (dbg_str) {
                             console.log(`\n\nattr y: ${cnt_y & 0x07} ++++++++++++++ `);
                             print_addr(va);
                             console.log("\n");
@@ -203,7 +220,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     let tmp = ram[va >> 2];
                     pix = (tmp >> (8 * (va & 3))) & 0xff;
 
-                    if ((cnt_y & 0x07) == 0) {
+                    if (dbg_str) {
                         console.log(`\n\ntxt y: ${cnt_y & 0x07} >>>>>>>>>>>>>>>>>>>>>>>>>>>>> `);
                         print_addr(va);
 
@@ -212,17 +229,17 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                         console.log(`mode0: ${mode0.toString(16)}`);
                         console.log(`mode1: ${mode1.toString(16)}`);
                         console.log(`mode2: ${mode2.toString(16)}`);
-                        
+
                         console.log("\n");
-                        
-                        console.log(("00000000" + ram[(va >> 2) + 3].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 2].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 1].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 0].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 7].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 6].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 5].toString(2)).slice(-8));
-                        console.log(("00000000" + ram[(va >> 2) + 4].toString(2)).slice(-8));
+
+                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 0) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 8) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 16) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 24) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 0) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 8) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 16) & 0xff).toString(2)).slice(-8));
+                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 24) & 0xff).toString(2)).slice(-8));
 
                         console.log("\n");
                     }
@@ -236,6 +253,10 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     curr_r = (tmp >> 0) & 0xff;
                     curr_g = (tmp >> 8) & 0xff;
                     curr_b = (tmp >> 16) & 0xff;
+
+                    if (dbg_str) {
+                        console.log(`pal_index:${pal_index.toString(16)} pal_num:${pal_num.toString(16)} r:${curr_r.toString(16)} g:${curr_g.toString(16)} b:${curr_b.toString(16)}`)
+                    }
 
                     // вывод пикселей
                     if (vfase == 3) {
@@ -287,12 +308,15 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 if (vfase == 3)
                     pix <<= 1;
 
-                //if (vfase == 6 && res640)
-                //                    pix <<= 1;
+                if (vfase == 6 && res640)
+                    pix <<= 1;
+
+                if (dbg_str)
+                    console.log("pix bits: " + ("000000000" + pix.toString(2)).slice(-8));
 
                 let curr_pix = (pix >> 7) & 1;
                 curr_pix |= flash << 1;
-                pal_num = (curr_pix << 2) | 0x4;
+                pal_num = ((curr_pix | 0x4) << 2);
                 pal_index = attr;
 
                 //pal_index = 1 << (curr_pix + 3);
@@ -328,7 +352,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
     }
     //break;
-    if (cnt_y > 40) break;
+    if (cnt_y > 60) break;
 }
 
 
