@@ -4,12 +4,14 @@ import { PNG } from "pngjs";
 
 const debug = true;
 const content = fs.readFileSync("./vram/bios.bin").buffer;
+//const content = fs.readFileSync("./vram/256.bin").buffer;
+//const content = fs.readFileSync("./vram/flappy.bin").buffer;
 
 const ram = new Uint32Array(content);
 const png = new PNG({
     colorType: 4,
     width: 896,
-    height: 320
+    height: 640
 });
 
 function print_addr(va: number) {
@@ -62,7 +64,8 @@ let curr_r = 0, curr_g = 0, curr_b = 0;
 let pal_index = 0, pal_num = 0;
 
 for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
-    const scr_line = cnt_y * scr_w * 2;
+    const scr_line = (cnt_y * 2) * scr_w * 2;
+    const scr_line2 = (cnt_y * 2 + 1) * scr_w * 2;
     for (let cnt_x = 0; cnt_x < scr_w; cnt_x++) {
 
         const ray_cntx = cnt_x >> 3;
@@ -115,9 +118,9 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     //debug && console.log("vstate: RdModes");
                     //debug && console.log("cnt_y[8:3]: " + (cnt_y >> 3).toString(16) + " CT5: " + (pixel_7m >> 2) + " CTH[5:3]: " +  ray_cntx.toString(16));
 
-                    if (pixel_7m ==0) {
-                    console.log("rd: modes **********************");
-                    debug && print_addr(va);
+                    if (pixel_7m == 0) {
+                        console.log("rd: modes **********************");
+                        debug && print_addr(va);
                     }
                     //debug && debug_modes(tmp_modes);
 
@@ -150,8 +153,6 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                             ((mode0 & 0x0f) << 6) |
                             ((mode1 & 7) << 3) |
                             posx;
-
-                        //va ^= 1 << 4;
                     }
 
                     console.log("rd: graph");
@@ -186,18 +187,23 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 }
             }
 
+            // формирование цвета пикселя
             if (mode_gfx) {
                 if (res640) {
-                    //pal_index = (pixel_7m & 4) ?  (attr >> 4) : (attr & 4);
-                    pal_index = (attr >> 4);
-                } else
+                    pal_index = (pixel_14m & 1) ? (attr & 0xf) : (attr >> 4);
+                    //pal_index = (attr >> 4);
+                    pal_num = mode0 >> 6;
+                } else {
                     pal_index = attr;
+                    pal_num = mode0 >> 6;
+                }
 
             } else {
-
+                let ww = 0;
             }
 
-            if (vfase == 6 && pixel_7m == 7) {
+            // чтение текущих модов
+            if (vfase == 6 && ((pixel_7m == 3 && res640) || pixel_7m == 7)) {
                 mode0 = (tmp_modes >> 0) & 0xff;
                 mode1 = (tmp_modes >> 8) & 0xff;
                 mode2 = (tmp_modes >> 16) & 0xff;
@@ -220,20 +226,33 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 oldmode0 = mode0;
             }
 
-            if (vfase == 1) {
+            // вывод пикселей
+            if (vfase == 3) {
                 let pointer = (scr_line + cnt_x * 2) << 2;
                 png.data[pointer + 0] = curr_r;
                 png.data[pointer + 1] = curr_g;
                 png.data[pointer + 2] = curr_b;
                 png.data[pointer + 3] = 0xff;
+
+                let pointer2 = (scr_line2 + cnt_x * 2) << 2;
+                png.data[pointer2 + 0] = curr_r;
+                png.data[pointer2 + 1] = curr_g;
+                png.data[pointer2 + 2] = curr_b;
+                png.data[pointer2 + 3] = 0xff;
             }
 
-            if (vfase == 4) {
+            if (vfase == 6) {
                 let pointer = (scr_line + cnt_x * 2 + 1) << 2;
                 png.data[pointer + 0] = curr_r;
                 png.data[pointer + 1] = curr_g;
                 png.data[pointer + 2] = curr_b;
                 png.data[pointer + 3] = 0xff;
+
+                let pointer2 = (scr_line2 + cnt_x * 2 + 1) << 2;
+                png.data[pointer2 + 0] = curr_r;
+                png.data[pointer2 + 1] = curr_g;
+                png.data[pointer2 + 2] = curr_b;
+                png.data[pointer2 + 3] = 0xff;
             }
 
 
@@ -242,7 +261,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
     }
     //break;
-    if (cnt_y > 140) break;
+    if (cnt_y > 100) break;
 }
 
 

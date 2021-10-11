@@ -1,9 +1,7 @@
 import * as fs from "fs"
 import * as path from "path"
-import { env, exit } from "process";
-import { arrayBuffer } from "stream/consumers";
 
-const fname = "bios"
+const fname = "256"
 
 const content = fs.readFileSync(path.join("vram", fname + ".bin"))
 const buff = new Uint8Array(content);
