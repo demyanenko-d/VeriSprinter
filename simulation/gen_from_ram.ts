@@ -1,9 +1,9 @@
 import * as fs from "fs";
 import { PNG } from "pngjs";
-import { off } from "process";
 
 const debug = true;
 const content = fs.readFileSync("./vram/bios.bin").buffer;
+//const content = fs.readFileSync("./vram/fn.bin").buffer;
 //const content = fs.readFileSync("./vram/256.bin").buffer;
 //const content = fs.readFileSync("./vram/flappy.bin").buffer;
 
@@ -114,32 +114,24 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                         if (pixel_7m == 4 && res640) cur_state = VState.RdAttrs;
                     }
 
-                    //debug && console.log("state: RdAttrs");
                     break
                 }
                 case 3: {
                     cur_state = VState.RdPallete;
-                    //debug && console.log("state: RdPallete");
                     break
                 }
                 case 4: {
-                    cur_state = VState.None;
                     pixel_14m |= 1;
+                    cur_state = ((pixel_7m & 3) == 0) ? VState.RdModes : VState.None;
 
-                    if (pixel_7m == 0) cur_state = VState.RdModes;
-                    if (pixel_7m == 4) cur_state = VState.RdModes;
-
-                    //debug && console.log("vfase: RdModes");
                     break
                 }
                 case 5: {
                     cur_state = VState.WrCpu;
-                    //debug && console.log("state: WrCpu");
                     break
                 }
                 case 6: {
                     cur_state = VState.RdPallete;
-                    //debug && console.log("state: RdPallete");
                     break
                 }
 
@@ -150,15 +142,10 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     va = (pgm << 17) | (ray_cntx << 11) | (((pixel_7m >> 2)) << 10) | 0x300 | ((cnt_y >> 3) << 2);
                     tmp_modes = ram[va >> 2];
 
-                    //console.log("modes: " + tmp_modes.toString(16));
-                    //debug && console.log("vstate: RdModes");
-                    //debug && console.log("cnt_y[8:3]: " + (cnt_y >> 3).toString(16) + " CT5: " + (pixel_7m >> 2) + " CTH[5:3]: " +  ray_cntx.toString(16));
-
                     if (pixel_7m == 0) {
                         //console.log("rd: modes **********************");
                         //debug && print_addr(va);
                     }
-                    //debug && debug_modes(tmp_modes);
 
                     break;
                 }
@@ -179,8 +166,8 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     } else { // gfx
                         //	Graf adress
 
-                        let posy = (cnt_y & 7);  // (mode2 >> 2) != 0 ? ((cnt_y & 7)^7) : (((mode2 & 1) << 2) | (((cnt_y >> 1) & 3) ^ 3));
-                        let posx = pixel_7m & 7; //  (mode2 >> 2) != 0 ? (pixel_7m & 7) :  (((mode2 & 2) << 1) | ;
+                        let posy = (cnt_y & 7);
+                        let posx = pixel_7m & 7;
 
                         if ((mode2 >> 2) != 0) {
                             posx >>= 1;
@@ -197,9 +184,6 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                             ((mode1 & 7) << 3) |
                             posx;
                     }
-
-                    //console.log("rd: graph");
-                    //debug && print_addr(va);
 
                     // mux
                     let tmp = ram[va >> 2];
@@ -314,13 +298,10 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 if (dbg_str)
                     console.log("pix bits: " + ("000000000" + pix.toString(2)).slice(-8));
 
-                let curr_pix = (pix >> 7) & 1;
+                let curr_pix = ((pix >> 7) & 1) ^ 1;
                 curr_pix |= flash << 1;
-                pal_num = ((curr_pix | 0x4) << 2);
+                pal_num = (curr_pix | 0x4) << 2;
                 pal_index = attr;
-
-                //pal_index = 1 << (curr_pix + 3);
-                //pal_num = 0;
             }
 
             // чтение текущих модов
@@ -329,18 +310,18 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 mode1 = (tmp_modes >> 8) & 0xff;
                 mode2 = (tmp_modes >> 16) & 0xff;
 
-                if (oldmode0 != mode0) { // микрооптимизация
 
-                    bord = (mode0 >> 4) == 0x0f;
-                    blank = (mode0 >> 2) == 0x3f || screen_off;
-                    intx = (mode0 >> 2) == 0x3f && ((mode0 & 1) == 1);
+                bord = (mode0 >> 4) == 0x0f;
+                blank = (mode0 >> 2) == 0x3f || screen_off;
+                intx = (mode0 >> 2) == 0x3f && ((mode0 & 1) == 1);
 
-                    res320 = (mode0 & 0x20) != 0 && !bord;
-                    res640 = (mode0 & 0x20) == 0 && !bord;
+                res320 = (mode0 & 0x20) != 0 && !bord;
+                res640 = (mode0 & 0x20) == 0 && !bord;
 
-                    mode_text = (mode0 & 0x10) != 0 && !bord;
-                    mode_gfx = (mode0 & 0x10) == 0 && !bord;
+                mode_text = (mode0 & 0x10) != 0 && !bord;
+                mode_gfx = (mode0 & 0x10) == 0 && !bord;
 
+                if (oldmode0 != mode0) {
                     debug && console.log(`bord:${bord} blank:${blank} intx:${intx} res320:${res320} res640:${res640} txt:${mode_text} gfx:${mode_gfx}`);
                 };
 
@@ -352,7 +333,7 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
     }
     //break;
-    if (cnt_y > 60) break;
+    if (cnt_y > 100) break;
 }
 
 
