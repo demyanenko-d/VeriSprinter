@@ -7,6 +7,9 @@ const content = fs.readFileSync("./vram/bios.bin").buffer;
 //const content = fs.readFileSync("./vram/256.bin").buffer;
 //const content = fs.readFileSync("./vram/flappy.bin").buffer;
 
+const dir_port = 0b000_0_1000;
+const zx_port = 0b0000_0000;
+
 const src_ram = new Uint8Array(content)
 const nram = new Uint8Array(src_ram.length);
 
@@ -44,13 +47,11 @@ function debug_modes(modes: number) {
 let scr_h = 320;
 let scr_w = 448;
 
-let dir_port = 0b0000_1000;
-let zx_port = 0b0000_0000;
-
 const pgm = (dir_port >> 3) & 1;
 const zx_screen = (dir_port >> 0) & 1;
 const screen_off = (dir_port >> 4) != 0;
 const flash = 0;
+const border_color = dir_port >> 5;
 
 enum VState {
     RdModes,
@@ -88,20 +89,18 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
         const ray_cntx = cnt_x >> 3;
         const pixel_7m = cnt_x & 0x07;
         let pixel_14m = pixel_7m << 1;
-        let dbg_str = cnt_y == 0 && cnt_x >= 168;
 
         for (let vfase = 1; vfase <= 6; vfase++) {
 
             switch (vfase) {
                 case 1: {
                     cur_state = VState.None;
+
                     if (mode_text) {
                         if (pixel_7m == 0) cur_state = VState.RdPixels;
                         if (pixel_7m == 4 && res640) cur_state = VState.RdPixels;
                     }
 
-                    // cur_state = mode_text && pixel_7m == 1 ? VState.RdPixels : VState.None;
-                    // debug && console.log("state: RdPixels");
                     break
                 }
                 case 2: {
@@ -141,12 +140,6 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 case VState.RdModes: {
                     va = (pgm << 17) | (ray_cntx << 11) | (((pixel_7m >> 2)) << 10) | 0x300 | ((cnt_y >> 3) << 2);
                     tmp_modes = ram[va >> 2];
-
-                    if (pixel_7m == 0) {
-                        //console.log("rd: modes **********************");
-                        //debug && print_addr(va);
-                    }
-
                     break;
                 }
 
@@ -156,16 +149,8 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     if (mode_text) {
                         // ZX-atr adress
                         va = (mode2 << 10) | ((mode0 & 0x0f) << 6) | (zx_screen << 5) | 0x18 | ((mode0 >> 6));
-
-                        if (dbg_str) {
-                            console.log(`\n\nattr y: ${cnt_y & 0x07} ++++++++++++++ `);
-                            print_addr(va);
-                            console.log("\n");
-                        }
-
                     } else { // gfx
                         //	Graf adress
-
                         let posy = (cnt_y & 7);
                         let posx = pixel_7m & 7;
 
@@ -203,55 +188,27 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     // mux
                     let tmp = ram[va >> 2];
                     pix = (tmp >> (8 * (va & 3))) & 0xff;
-
-                    if (dbg_str) {
-                        console.log(`\n\ntxt y: ${cnt_y & 0x07} >>>>>>>>>>>>>>>>>>>>>>>>>>>>> `);
-                        print_addr(va);
-
-                        console.log("\n");
-
-                        console.log(`mode0: ${mode0.toString(16)}`);
-                        console.log(`mode1: ${mode1.toString(16)}`);
-                        console.log(`mode2: ${mode2.toString(16)}`);
-
-                        console.log("\n");
-
-                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 0) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 8) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 16) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 0] >> 24) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 0) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 8) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 16) & 0xff).toString(2)).slice(-8));
-                        console.log(("00000000" + ((ram[(va >> 2) + 1] >> 24) & 0xff).toString(2)).slice(-8));
-
-                        console.log("\n");
-                    }
-
                     break;
                 }
 
                 case VState.RdPallete: {
                     va = (pal_index << 10) | 0x3e0 | (pal_num << 2);
                     let tmp = ram[va >> 2];
+
                     curr_r = (tmp >> 0) & 0xff;
                     curr_g = (tmp >> 8) & 0xff;
                     curr_b = (tmp >> 16) & 0xff;
 
-                    if (dbg_str) {
-                        console.log(`pal_index:${pal_index.toString(16)} pal_num:${pal_num.toString(16)} r:${curr_r.toString(16)} g:${curr_g.toString(16)} b:${curr_b.toString(16)}`)
-                    }
-
                     // вывод пикселей
                     if (vfase == 3) {
-                        let pointer = (scr_line + cnt_x * 2) << 2;
+                        let pointer = (scr_line + (cnt_x - 8) * 2) << 2;
                         png.data[pointer + 0] = curr_r;
                         png.data[pointer + 1] = curr_g;
                         png.data[pointer + 2] = curr_b;
                         png.data[pointer + 3] = 0xff;
 
                         // увдоение строк
-                        let pointer2 = (scr_line2 + cnt_x * 2) << 2;
+                        let pointer2 = (scr_line2 + (cnt_x - 8) * 2) << 2;
                         png.data[pointer2 + 0] = curr_r;
                         png.data[pointer2 + 1] = curr_g;
                         png.data[pointer2 + 2] = curr_b;
@@ -259,14 +216,14 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                     }
 
                     if (vfase == 6) {
-                        let pointer = (scr_line + cnt_x * 2 + 1) << 2;
+                        let pointer = (scr_line + (cnt_x - 8) * 2 + 1) << 2;
                         png.data[pointer + 0] = curr_r;
                         png.data[pointer + 1] = curr_g;
                         png.data[pointer + 2] = curr_b;
                         png.data[pointer + 3] = 0xff;
 
                         // увдоение строк
-                        let pointer2 = (scr_line2 + cnt_x * 2 + 1) << 2;
+                        let pointer2 = (scr_line2 + (cnt_x - 8) * 2 + 1) << 2;
                         png.data[pointer2 + 0] = curr_r;
                         png.data[pointer2 + 1] = curr_g;
                         png.data[pointer2 + 2] = curr_b;
@@ -278,10 +235,11 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
             }
 
             // формирование цвета пикселя
+
+
             if (mode_gfx) {
                 if (res640) {
                     pal_index = (pixel_14m & 1) ? (attr & 0xf) : (attr >> 4);
-                    //pal_index = (attr >> 4);
                     pal_num = mode0 >> 6;
                 } else {
                     pal_index = attr;
@@ -295,13 +253,20 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
                 if (vfase == 6 && res640)
                     pix <<= 1;
 
-                if (dbg_str)
-                    console.log("pix bits: " + ("000000000" + pix.toString(2)).slice(-8));
-
-                let curr_pix = ((pix >> 7) & 1) ^ 1;
+                let curr_pix = ((pix >> 7) & 1);
                 curr_pix |= flash << 1;
-                pal_num = (curr_pix | 0x4) << 2;
+                pal_num = (curr_pix | 0x4);
                 pal_index = attr;
+            }
+
+            if (bord) {
+                pal_index = (border_color << 3) | border_color;
+                pal_num = 4;
+            }
+
+            if (blank) {
+                pal_index = 0;
+                pal_num   = 4;
             }
 
             // чтение текущих модов
