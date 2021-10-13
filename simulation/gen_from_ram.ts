@@ -30,20 +30,6 @@ const png = new PNG({
 
 fs.writeFileSync("out.bin", nram);
 
-function print_addr(va: number) {
-    const offs = (va & 0x1f) | ((va >> 5) & 0x1fe0);
-    const page = ((va >> 5) & 0x1f);
-    console.log("VA: " + va.toString(16) + " ZX-PAGE: " + page + " offs(" + offs.toString(16) + ") : " + ((page << 13) | offs).toString(16));
-}
-
-function debug_modes(modes: number) {
-    const mode0 = (modes >> 0) & 0xff;
-    const mode1 = (modes >> 8) & 0xff;
-    const mode2 = (modes >> 16) & 0xff;
-
-    console.log("mode0: " + mode0.toString(16) + " mode1: " + mode1.toString(16) + " mode2: " + mode2.toString(16));
-}
-
 let scr_h = 320;
 let scr_w = 448;
 
