@@ -320,20 +320,12 @@ for (let cnt_y = 0; cnt_y < scr_h; cnt_y++) {
 
                 mode_text = (mode0 & 0x10) != 0 && !bord;
                 mode_gfx = (mode0 & 0x10) == 0 && !bord;
-
-                if (oldmode0 != mode0) {
-                    debug && console.log(`bord:${bord} blank:${blank} intx:${intx} res320:${res320} res640:${res640} txt:${mode_text} gfx:${mode_gfx}`);
-                };
-
-                oldmode0 = mode0;
             }
 
         }
 
 
-    }
-    //break;
-    if (cnt_y > 100) break;
+    };
 }
 
 
