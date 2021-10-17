@@ -66,7 +66,6 @@ BEGIN
 
 	INT		= DFF((KB_CT[] == 0),CLK42,,INT_ENA);
 
---	KB_CT[].clk	= DFF(CLK_K,CLK42,,);
 	KB_CT[].clk	= CLK_K;
 	KB_CT[].prn	= DFF(KBD_CC,CLK42,,);
 
@@ -89,9 +88,9 @@ BEGIN
 	KB_ALT.clk	= !KB_CT2;
 	KB_SH.clk	= !KB_CT2;
 
-	KB_CTRL_X	= LCELL(KB_D[] == B"XXXXX1X100X");
-	KB_ALT_X	= LCELL(KB_D[] == B"XXXXX1X001X");
-	KB_SH_X		= LCELL(KB_D[] == B"XX0X01X0XXX") &
+	KB_CTRL_X	= LCELL(KB_D[] == B"XX00010100X"); -- 14
+	KB_ALT_X	= LCELL(KB_D[] == B"X000010001X"); -- 11
+	KB_SH_X		= LCELL(KB_D[] == B"XX01011001X") || KB_D[] == B"XX00010010X")); 59 or 12
 			   CASCADE((KB_D[] == B"XXX1XX1X01X") or (KB_D[] == B"XXX0XX0X10X"));
 	KB_XXX		= LCELL(KB_D[] == B"XX000X0XXXX");
 
@@ -171,7 +170,6 @@ BEGIN
 	KBD[].clk	= CLK42;
 	KBD[].prn	= DFF(VCC,KB_MA2,(!/IO & ENA),);
 
---	KBD[].prn	= DFF(!/IOM,CLK42,,);
 	KBD[].d		= KBD[] & (KD[5..0] or KB_MXA);
 
 	KBO[]		= (VCC,VCC,KBD[]);
